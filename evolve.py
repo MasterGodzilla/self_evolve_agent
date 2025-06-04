@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+import argparse
 from datetime import datetime
 from api import chat_complete
 
@@ -12,8 +13,13 @@ def read_main_file():
 
 def create_checkpoint():
     """Create a timestamped backup of main.py"""
+    # Create checkpoints directory if it doesn't exist
+    checkpoint_dir = "checkpoints"
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    checkpoint_name = f"main_{timestamp}.py"
+    checkpoint_name = os.path.join(checkpoint_dir, f"main_{timestamp}.py")
     shutil.copy2('main.py', checkpoint_name)
     print(f"Checkpoint created: {checkpoint_name}")
     return checkpoint_name
@@ -56,7 +62,7 @@ def run_main():
     
     print("-" * 40)
 
-def evolve_main():
+def evolve_main(model_name="gemini-2.0-flash", temperature=0.7):
     """Use AI to suggest improvements to main.py"""
     current_code = read_main_file()
     
@@ -122,9 +128,9 @@ Format your response with the new code in a code block like this:
         # Use chat_complete from api.py with your preferred model
         response = chat_complete(
             messages,
-            model_name="gemini-2.0-flash",  # You can change this to any supported model
+            model_name=model_name,
             max_tokens=2000,
-            temperature=0.7
+            temperature=temperature
         )
         
         print("\n=== AI's Evolution Thoughts ===")
@@ -150,13 +156,16 @@ Format your response with the new code in a code block like this:
         print(f"Error during evolution: {e}")
         return None
 
-def run_evolution():
+def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
     """Main evolution loop"""
-    print("=== Self-Evolving Agent v0.1 ===")
+    print("=== Self-Evolving Agent v2.0 ===")
+    print(f"Using model: {model_name}")
+    print(f"Temperature: {temperature}")
     print("This agent will evolve the main.py file.")
-    print("Current main.py file will be backed up before each evolution.\n")
+    print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
     generation = 1
+    first_run = True
     
     while True:
         print(f"\n--- Generation {generation} ---")
@@ -167,8 +176,10 @@ def run_evolution():
         print(read_main_file())
         print("-" * 40)
         
-        # Run current main.py
-        run_main()
+        # Run current main.py only on first iteration or after changes
+        if first_run or generation > 1:
+            run_main()
+            first_run = False
         
         # Wait for user input
         input("\nPress Enter to continue with evolution...")
@@ -178,7 +189,7 @@ def run_evolution():
         
         # Get evolution suggestion
         print("\nEvolving...")
-        new_code = evolve_main()
+        new_code = evolve_main(model_name, temperature)
         
         if new_code:
             # Show the extracted code clearly
@@ -195,7 +206,7 @@ def run_evolution():
                     print(f"\nEvolution complete! main.py has been updated.")
                     print(f"Previous version saved as: {checkpoint}")
                     
-                    # Run the new version immediately
+                    # Run the new version
                     run_main()
                 else:
                     print("Failed to apply evolution.")
@@ -213,6 +224,38 @@ def run_evolution():
             break
     
     print("\nEvolution process complete.")
+    print(f"All checkpoints are saved in the 'checkpoints' folder.")
+
+def main():
+    """Parse arguments and run evolution"""
+    parser = argparse.ArgumentParser(
+        description='Self-evolving Python code using LLMs',
+        epilog='See README.md for detailed usage examples and available models.'
+    )
+    
+    parser.add_argument(
+        '--model', '-m',
+        type=str,
+        default='gemini-2.0-flash',
+        help='Model to use for evolution (default: gemini-2.0-flash)'
+    )
+    
+    parser.add_argument(
+        '--temperature', '-t',
+        type=float,
+        default=0.7,
+        help='Temperature for model creativity (0.0-1.0, default: 0.7)'
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate temperature
+    if not 0.0 <= args.temperature <= 1.0:
+        print("Error: Temperature must be between 0.0 and 1.0")
+        return
+    
+    # Run evolution with specified model
+    run_evolution(args.model, args.temperature)
 
 if __name__ == "__main__":
-    run_evolution() 
+    main() 
