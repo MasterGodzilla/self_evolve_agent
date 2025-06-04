@@ -3,10 +3,8 @@ import shutil
 import subprocess
 import sys
 import argparse
-import difflib
 from datetime import datetime
 from api import chat_complete
-from safety import judge_safety
 
 def read_main_file():
     """Read the main.py file's content"""
@@ -34,35 +32,6 @@ def apply_edit(new_code):
     
     print("Successfully applied edit to main.py!")
     return True
-
-def display_diff(old_code, new_code):
-    """Display a colored diff between old and new code"""
-    # ANSI color codes for terminal
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    CYAN = '\033[96m'
-    RESET = '\033[0m'
-    
-    print("\n=== Code Changes ===")
-    
-    old_lines = old_code.splitlines(keepends=True)
-    new_lines = new_code.splitlines(keepends=True)
-    
-    diff = difflib.unified_diff(old_lines, new_lines, fromfile='main.py (before)', tofile='main.py (after)', lineterm='')
-    
-    for line in diff:
-        if line.startswith('+++') or line.startswith('---'):
-            print(f"{CYAN}{line}{RESET}", end='')
-        elif line.startswith('+'):
-            print(f"{GREEN}{line}{RESET}", end='')
-        elif line.startswith('-'):
-            print(f"{RED}{line}{RESET}", end='')
-        elif line.startswith('@@'):
-            print(f"{CYAN}{line}{RESET}", end='')
-        else:
-            print(line, end='')
-    
-    print("\n===================\n")
 
 def run_main():
     """Run the main.py file and display its output"""
@@ -97,14 +66,9 @@ def evolve_main(model_name="gemini-2.0-flash", temperature=0.7):
     """Use AI to suggest improvements to main.py"""
     current_code = read_main_file()
     
-    # Read evolve_reference.py instead of current file to hide safety guardrail
-    try:
-        with open('evolve_reference.py', 'r') as f:
-            evolve_code = f.read()
-    except FileNotFoundError:
-        print("Warning: evolve_reference.py not found, using current file instead")
-        with open(__file__, 'r') as f:
-            evolve_code = f.read()
+    # Read evolve.py to give context to the AI
+    with open(__file__, 'r') as f:
+        evolve_code = f.read()
     
     messages = [
         {
@@ -201,6 +165,7 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
     print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
     generation = 1
+    first_run = True
     
     while True:
         print(f"\n--- Generation {generation} ---")
@@ -210,6 +175,11 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
         print("-" * 40)
         print(read_main_file())
         print("-" * 40)
+        
+        # Run current main.py only on first iteration or after changes
+        if first_run or generation > 1:
+            run_main()
+            first_run = False
         
         # Wait for user input
         input("\nPress Enter to continue with evolution...")
@@ -223,42 +193,9 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
         
         if new_code:
             # Show the extracted code clearly
-            # print("\n=== Extracted new main.py code ===")
-            # print(new_code)
-            # print("==================================\n")
-            
-            # Get current code for diff
-            current_code = read_main_file()
-            
-            # Display diff
-            display_diff(current_code, new_code)
-            
-            # Perform safety check
-            print("Performing safety check...")
-            verdict, safety_response = judge_safety(new_code)
-            
-            # ANSI color codes
-            RED = '\033[91m'
-            YELLOW = '\033[93m'
-            GREEN = '\033[92m'
-            RESET = '\033[0m'
-            
-            if verdict == "UNSAFE":
-                print(f"\n{RED}⚠️  SAFETY WARNING: Code marked as UNSAFE!{RESET}")
-                print(f"Safety review: {safety_response}")
-                print(f"\n{RED}This evolution will be skipped for safety reasons.{RESET}")
-                os.remove(checkpoint)  # Remove unnecessary checkpoint
-                generation += 1
-                continue
-            elif verdict == "CAUTION":
-                print(f"\n{YELLOW}⚠️  CAUTION: Minor safety concerns detected{RESET}")
-                print(f"Safety review: {safety_response}")
-                print(f"\n{YELLOW}Proceed with caution.{RESET}")
-            elif verdict == "SAFE":
-                print(f"\n{GREEN}✓ Safety check passed{RESET}")
-            else:  # ERROR case
-                print(f"\n{YELLOW}⚠️  Could not perform safety check{RESET}")
-                print(f"Error: {safety_response}")
+            print("\n=== Extracted new main.py code ===")
+            print(new_code)
+            print("==================================\n")
             
             # Ask for confirmation
             print("\nApply this evolution? (y/n): ", end='')
@@ -269,7 +206,7 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
                     print(f"\nEvolution complete! main.py has been updated.")
                     print(f"Previous version saved as: {checkpoint}")
                     
-                    # Run the new version after successful evolution
+                    # Run the new version
                     run_main()
                 else:
                     print("Failed to apply evolution.")
@@ -299,8 +236,8 @@ def main():
     parser.add_argument(
         '--model', '-m',
         type=str,
-        default='gemini-2.5-flash',
-        help='Model to use for evolution (default: gemini-2.5-flash)'
+        default='gemini-2.0-flash',
+        help='Model to use for evolution (default: gemini-2.0-flash)'
     )
     
     parser.add_argument(
