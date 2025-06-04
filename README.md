@@ -68,18 +68,9 @@ python evolve.py
 python evolve.py --model gpt-4o
 python evolve.py -m gemini-2.5-pro
 
-# Adjust creativity (0.0-1.0, default: 0.7)
-python evolve.py --temperature 0.9
-python evolve.py -t 0.3
-
-# Combine options
-python evolve.py -m gpt-4o -t 0.8
-
 # Get help and see all available models
 python evolve.py --help
 ```
-
-**Temperature guide:** Lower values (0.3) = focused, Higher values (0.9) = creative
 
 ## The Evolution Process
 
@@ -175,9 +166,7 @@ Things to watch for:
 
 ## Tips
 
-- **For more interesting evolutions**: Use higher temperatures (0.8-0.9)
-- **For more coherent evolutions**: Use lower temperatures (0.5-0.7)
-- **To see diverse approaches**: Try different models
+- **For more interesting evolutions**: Try different models
 - **To continue a theme**: Manually edit main.py between evolutions
 - **To reset**: Replace main.py with original "Hello, World!"
 - **To review history**: Check the `checkpoints/` folder

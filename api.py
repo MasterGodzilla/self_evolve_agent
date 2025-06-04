@@ -489,11 +489,11 @@ def batch_chat_complete(messages, # openai format
 
 if __name__ == '__main__':
     print ("Testing chat_complete")
-    model_names = ['gemini-2.0-flash', 'gpt-4o-mini', 'claude-3-5-haiku', 'deepseek-v3']
+    # model_names = ['gemini-2.0-flash', 'gpt-4o-mini', 'claude-3-5-haiku', 'deepseek-v3']
     # model_names = ['claude-3-5-haiku']
     # To test Together models: model_names = ['llama3.1-8b', 'qwen2.5-7b']
     # To test Hyperbolic models: 
-    # model_names = ['deepseek-v3', 'qwen3']
+    model_names = ['deepseek-v3', 'qwen3']
     # model_names = ['gemini-2.5-pro-preview-05-06', 'gemini-2.5-flash-preview-05-20']
     message = [{"role": "user", "content": f"What is the capital of France?"}]
     for model_name in model_names:

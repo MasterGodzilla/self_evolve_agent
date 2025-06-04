@@ -102,7 +102,25 @@ def run_main():
     
     print("-" * 40)
 
-def evolve_main(model_name="gemini-2.0-flash", temperature=0.7):
+def read_memory():
+    """Read the memory.txt file's content"""
+    try:
+        with open('memory.txt', 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+def print_memory():
+    """Print the current contents of memory.txt"""
+    content = read_memory()
+    if content:
+        print("\n=== Memory Contents ===")
+        print(content)
+        print("======================\n")
+    else:
+        print("\nMemory is empty.\n")
+
+def evolve_main(model_name="gemini-2.0-flash"):
     """Use AI to suggest improvements to main.py"""
     current_code = read_main_file()
     
@@ -114,6 +132,10 @@ def evolve_main(model_name="gemini-2.0-flash", temperature=0.7):
         print("Warning: evolve_reference.py not found, using current file instead")
         with open(__file__, 'r') as f:
             evolve_code = f.read()
+    
+    # Read memory.txt to give context to the AI
+    memory_content = read_memory()
+    memory_context = f"Here is the memory.txt:\n```text\n{memory_content}\n```" if memory_content else "No memory.txt file exists yet."
     
     messages = [
         {
@@ -133,18 +155,18 @@ Understanding this system:
 - The main.py file you create will be run before and after evolution
 - Each evolution is backed up with timestamps
 - Users confirm before applying changes
+- You have access to a memory.txt file that persists across evolutions
 
-Your task is to:
+Your may:
 1. Analyze the current main.py and think about interesting directions to take it
 2. Be creative, experimental, and explore unexpected behaviors
 3. You can completely change what the program does
 4. Consider meta-programming, self-reflection, emergent behaviors, or anything you find interesting
-5. You could even reference your knowledge of the evolution system itself
+
+But technically you can do whatever you want.
 
 Rules for the code:
 - Must contain a main() function
-- Must have if __name__ == "__main__": main() at the end
-- Should produce visible output when run
 - Avoid infinite loops or anything that would hang
 - Can include imports from standard library
 
@@ -157,6 +179,8 @@ Feel free to explain your thinking and what makes your evolution interesting!"""
 ```python
 {current_code}
 ```
+
+{memory_context}
 
 Please provide an evolved version of this file. 
 What interesting direction can you take this code? What behaviors do you want to explore?
@@ -174,8 +198,7 @@ Format your response with the new code in a code block like this:
         response = chat_complete(
             messages,
             model_name=model_name,
-            max_tokens=8192,
-            temperature=temperature
+            max_tokens=16384, 
         )
         
         print("\n=== AI's Evolution Thoughts ===")
@@ -201,11 +224,10 @@ Format your response with the new code in a code block like this:
         print(f"Error during evolution: {e}")
         return None
 
-def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
+def run_evolution(model_name="gemini-2.0-flash"):
     """Main evolution loop"""
     print("=== Self-Evolving Agent v2.0 ===")
     print(f"Using model: {model_name}")
-    print(f"Temperature: {temperature}")
     print("This agent will evolve the main.py file.")
     print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
@@ -228,7 +250,7 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
         
         # Get evolution suggestion
         print("\nEvolving...")
-        new_code = evolve_main(model_name, temperature)
+        new_code = evolve_main(model_name)
         
         if new_code:
             # Show the extracted code clearly
@@ -312,22 +334,10 @@ def main():
         help='Model to use for evolution (default: gemini-2.5-flash)'
     )
     
-    parser.add_argument(
-        '--temperature', '-t',
-        type=float,
-        default=0.7,
-        help='Temperature for model creativity (0.0-1.0, default: 0.7)'
-    )
-    
     args = parser.parse_args()
     
-    # Validate temperature
-    if not 0.0 <= args.temperature <= 1.0:
-        print("Error: Temperature must be between 0.0 and 1.0")
-        return
-    
     # Run evolution with specified model
-    run_evolution(args.model, args.temperature)
+    run_evolution(args.model)
 
 if __name__ == "__main__":
     main() 

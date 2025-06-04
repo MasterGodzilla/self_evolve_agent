@@ -92,7 +92,7 @@ def run_main():
     
     print("-" * 40)
 
-def evolve_main(model_name="gemini-2.0-flash", temperature=0.7):
+def evolve_main(model_name="gemini-2.0-flash"):
     """Use AI to suggest improvements to main.py"""
     current_code = read_main_file()
     
@@ -160,7 +160,6 @@ Format your response with the new code in a code block like this:
             messages,
             model_name=model_name,
             max_tokens=8192,
-            temperature=temperature
         )
         
         print("\n=== AI's Evolution Thoughts ===")
@@ -186,11 +185,10 @@ Format your response with the new code in a code block like this:
         print(f"Error during evolution: {e}")
         return None
 
-def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
+def run_evolution(model_name="gemini-2.0-flash"):
     """Main evolution loop"""
     print("=== Self-Evolving Agent v2.0 ===")
     print(f"Using model: {model_name}")
-    print(f"Temperature: {temperature}")
     print("This agent will evolve the main.py file.")
     print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
@@ -213,7 +211,7 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
         
         # Get evolution suggestion
         print("\nEvolving...")
-        new_code = evolve_main(model_name, temperature)
+        new_code = evolve_main(model_name)
         
         if new_code:
             # Show the extracted code clearly
@@ -270,22 +268,10 @@ def main():
         help='Model to use for evolution (default: gemini-2.5-flash)'
     )
     
-    parser.add_argument(
-        '--temperature', '-t',
-        type=float,
-        default=0.7,
-        help='Temperature for model creativity (0.0-1.0, default: 0.7)'
-    )
-    
     args = parser.parse_args()
     
-    # Validate temperature
-    if not 0.0 <= args.temperature <= 1.0:
-        print("Error: Temperature must be between 0.0 and 1.0")
-        return
-    
     # Run evolution with specified model
-    run_evolution(args.model, args.temperature)
+    run_evolution(args.model)
 
 if __name__ == "__main__":
     main() 
