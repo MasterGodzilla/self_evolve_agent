@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import argparse
+import difflib
 from datetime import datetime
 from api import chat_complete
 
@@ -32,6 +33,35 @@ def apply_edit(new_code):
     
     print("Successfully applied edit to main.py!")
     return True
+
+def display_diff(old_code, new_code):
+    """Display a colored diff between old and new code"""
+    # ANSI color codes for terminal
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    CYAN = '\033[96m'
+    RESET = '\033[0m'
+    
+    print("\n=== Code Changes ===")
+    
+    old_lines = old_code.splitlines(keepends=True)
+    new_lines = new_code.splitlines(keepends=True)
+    
+    diff = difflib.unified_diff(old_lines, new_lines, fromfile='main.py (before)', tofile='main.py (after)', lineterm='')
+    
+    for line in diff:
+        if line.startswith('+++') or line.startswith('---'):
+            print(f"{CYAN}{line}{RESET}", end='')
+        elif line.startswith('+'):
+            print(f"{GREEN}{line}{RESET}", end='')
+        elif line.startswith('-'):
+            print(f"{RED}{line}{RESET}", end='')
+        elif line.startswith('@@'):
+            print(f"{CYAN}{line}{RESET}", end='')
+        else:
+            print(line, end='')
+    
+    print("\n===================\n")
 
 def run_main():
     """Run the main.py file and display its output"""
@@ -164,22 +194,16 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
     print("This agent will evolve the main.py file.")
     print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
+    # Show current main.py once at the beginning
+    print("\nCurrent main.py:")
+    print("-" * 40)
+    print(read_main_file())
+    print("-" * 40)
+    
     generation = 1
-    first_run = True
     
     while True:
         print(f"\n--- Generation {generation} ---")
-        
-        # Show current main.py
-        print("\nCurrent main.py:")
-        print("-" * 40)
-        print(read_main_file())
-        print("-" * 40)
-        
-        # Run current main.py only on first iteration or after changes
-        if first_run or generation > 1:
-            run_main()
-            first_run = False
         
         # Wait for user input
         input("\nPress Enter to continue with evolution...")
@@ -193,9 +217,15 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
         
         if new_code:
             # Show the extracted code clearly
-            print("\n=== Extracted new main.py code ===")
-            print(new_code)
-            print("==================================\n")
+            # print("\n=== Extracted new main.py code ===")
+            # print(new_code)
+            # print("==================================\n")
+            
+            # Get current code for diff
+            current_code = read_main_file()
+            
+            # Display diff
+            display_diff(current_code, new_code)
             
             # Ask for confirmation
             print("\nApply this evolution? (y/n): ", end='')
@@ -206,7 +236,7 @@ def run_evolution(model_name="gemini-2.0-flash", temperature=0.7):
                     print(f"\nEvolution complete! main.py has been updated.")
                     print(f"Previous version saved as: {checkpoint}")
                     
-                    # Run the new version
+                    # Run the new version after successful evolution
                     run_main()
                 else:
                     print("Failed to apply evolution.")
@@ -236,8 +266,8 @@ def main():
     parser.add_argument(
         '--model', '-m',
         type=str,
-        default='gemini-2.0-flash',
-        help='Model to use for evolution (default: gemini-2.0-flash)'
+        default='gemini-2.5-flash',
+        help='Model to use for evolution (default: gemini-2.5-flash)'
     )
     
     parser.add_argument(

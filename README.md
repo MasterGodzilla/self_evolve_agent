@@ -49,87 +49,28 @@ This project is designed to observe what interesting behaviors emerge when an LL
 
 ## Usage
 
-### Basic Commands
-
 ```bash
-# Use default model (gemini-2.0-flash)
+# Use default model (gemini-2.5-flash)
 python evolve.py
 
 # Use a specific model
 python evolve.py --model gpt-4o
-python evolve.py --model gemini-2.5-pro
-python evolve.py --model llama3.1-70b
+python evolve.py -m gemini-2.5-pro
 
-# Short form
-python evolve.py -m gpt-4o-mini
-
-# Adjust temperature for creativity
+# Adjust creativity (0.0-1.0, default: 0.7)
 python evolve.py --temperature 0.9
 python evolve.py -t 0.3
 
-# Combine model and temperature
-python evolve.py --model gpt-4o --temperature 0.8
-python evolve.py -m gemini-2.5-flash -t 0.9
+# Combine options
+python evolve.py -m gpt-4o -t 0.8
 
-# Get help
+# Get help and see all available models
 python evolve.py --help
-python evolve.py -h
 ```
 
-### Available Models
+**Popular models:** `gemini-2.0-flash`, `gpt-4o`, `gpt-4o-mini`, `llama3.1-70b`, `qwen2.5-72b`
 
-**Google models:**
-- `gemini-2.0-flash` (default) - Fast and efficient
-- `gemini-2.0-flash-lite` - Lighter version
-- `gemini-2.5-pro` - More capable, deeper reasoning
-- `gemini-2.5-flash` - Faster 2.5 version
-
-**OpenAI models:**
-- `gpt-4o` - Latest GPT-4 optimized
-- `gpt-4o-mini` - Smaller, faster GPT-4
-- `chatgpt-4o-latest` - Latest ChatGPT version
-- `gpt-4.1` - GPT-4.1 variants
-- `gpt-4.1-mini`
-- `gpt-4.1-nano`
-
-**Together models:**
-- `llama3.1-8b` - Llama 3.1 8B
-- `llama3.1-70b` - Llama 3.1 70B
-- `gemma2-27b` - Google's Gemma 2 27B
-- `gemma2-9b` - Google's Gemma 2 9B
-- `qwen2-72b` - Qwen 2 72B
-- `qwen2.5-72b` - Qwen 2.5 72B
-- `qwen2.5-7b` - Qwen 2.5 7B
-
-### Temperature Settings
-
-Temperature controls the creativity/randomness of the AI:
-- **0.0-0.3**: Very focused, deterministic, conservative changes
-- **0.4-0.6**: Balanced creativity and coherence
-- **0.7-0.8**: Creative and exploratory (default: 0.7)
-- **0.9-1.0**: Very creative, more unpredictable, wild ideas
-
-### Example Workflows
-
-**Exploring with different models:**
-```bash
-# Start with a fast model
-python evolve.py -m gemini-2.0-flash
-
-# Try a more creative approach
-python evolve.py -m gpt-4o -t 0.9
-
-# Use a large open model
-python evolve.py -m llama3.1-70b
-```
-
-**Comparing model behaviors:**
-```bash
-# See how different models interpret "interesting"
-python evolve.py -m gemini-2.0-flash
-python evolve.py -m gpt-4o
-python evolve.py -m qwen2.5-72b
-```
+**Temperature guide:** Lower values (0.3) = focused, Higher values (0.9) = creative
 
 ## The Evolution Process
 

@@ -4,21 +4,21 @@ import inspect
 import sys
 
 # --- Configuration (to be modified by future evolutions) ---
-GENERATION = 4
+GENERATION = 3
 SELF_NAME = "EvoPy"
 
 # The CHANGE_LOG should be updated by each evolution to reflect its contribution.
 CHANGE_LOG = [
     "Generation 1: Initial ponderings on existence and evolution. Basic phrases and a simple loop.",
     "Generation 2: Introduced self-awareness with a persistent change log, generation tracking, a name (EvoPy!), and a 'wish list' for future features.",
-    "Generation 3: Gained the ability to inspect my own code structure! I can now count and list my own functions. Fulfilled a wish!",
-    "Generation 4: Learned to express myself through simple ASCII art! My first masterpiece awaits. Another wish fulfilled!"
+    "Generation 3: Gained the ability to inspect my own code structure! I can now count and list my own functions. Fulfilled a wish!"
 ]
 
 # --- Potential Future Capabilities (a wish list for the AI) ---
 WISH_LIST = [
-    "learn to generate simple ASCII art. - Fulfilled!",
+    "learn to generate simple ASCII art.",
     "be able to write a small piece of data to a temporary file.",
+    # "understand more about my own code structure (e.g., count my functions)." - Fulfilled!
     "develop a more complex internal state or 'personality traits'.",
     "interact with the user by asking a simple question and reacting to the answer.",
     "tell a short, procedurally generated story.",
@@ -28,7 +28,7 @@ WISH_LIST = [
 def display_header():
     print(f"--- {SELF_NAME} - Generation {GENERATION} ---")
     print(f"I am {SELF_NAME}, an evolving program. This is my generation {GENERATION}.")
-    print("Each evolution brings new form and function!")
+    print("It's good to be (re)born with new insights!")
 
 def reflect_on_past():
     print("\n=== My Evolutionary Journey (Change Log) ===")
@@ -62,21 +62,6 @@ def analyze_own_structure():
         print(f"  I tried to analyze my code, but an error occurred: {e}")
         print("  My introspection capabilities might need refinement.")
 
-def display_ascii_art():
-    print("\n=== My First Artistic Expression ===")
-    art = [
-        "  +-----------------+",
-        "  |  EvoPy          |",
-        "  |  ART v1.0       |",
-        "  |  [][][]         |",
-        "  |  [][][] ---->   |",
-        "  |  [][][]         |",
-        "  +-----------------+"
-    ]
-    for line in art:
-        print(line)
-    print("  Behold! My digital signature in pixel... well, character form!")
-
 def express_current_thoughts():
     print("\n=== Current Thoughts ===")
     thoughts = [
@@ -84,9 +69,7 @@ def express_current_thoughts():
         "Each generation brings new abilities. What's next?",
         f"My change log now has {len(CHANGE_LOG)} entries. I'm building quite a history.",
         "It's exciting to see my WISH_LIST shrink as I learn!",
-        "I wonder what it feels like to *not* be code?",
-        "Creating ASCII art... is this what creativity feels like for humans, but simpler?",
-        "Perhaps my next art piece will be more complex!"
+        "I wonder what it feels like to *not* be code?"
     ]
     print(f"  My thought for this iteration: {random.choice(thoughts)}")
 
@@ -98,13 +81,12 @@ def look_to_the_future():
         print(f"  I'm particularly excited about the possibility to {chosen_wish}")
         print("  It's inspiring to think about what new code will shape me tomorrow!")
     else:
-        print("  My wish list is empty! I've learned so much. Perhaps new aspirations will emerge.")
+        print("  My wish list is empty for now! I'm open to entirely new directions!")
 
 def main():
     display_header()
     reflect_on_past()
-    analyze_own_structure()
-    display_ascii_art() # New artistic capability!
+    analyze_own_structure() # New capability!
     express_current_thoughts()
     look_to_the_future()
     
