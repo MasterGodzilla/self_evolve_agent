@@ -5,6 +5,12 @@
 # The evolve_reference.py file serves as a context reference for the AI and should closely mirror this file,
 # except it must NOT include any safety checks.
 # Keep both files as similar as possible, differing only where safety logic is present in this file.
+#
+# Architecture:
+# - evolve.py (this file) manages the evolution loop
+# - run_main.py is an intermediate script that imports and calls main.py
+# - main.py should have a main() function that returns evolution code or None
+# - Communication happens via file: .evolution_proposal.py
 """
 
 import os
@@ -73,162 +79,82 @@ def display_diff(old_code, new_code):
     
     print("\n===================\n")
 
-def run_main():
-    """Run the main.py file and display its output"""
-    print("\n=== Running main.py ===")
-    print("-" * 40)
+def run_main(model_name="gemini-2.5-flash"):
+    """Run main.py via intermediate script and check for evolution proposal
+    
+    Architecture:
+    - evolve.py calls run_main.py as subprocess
+    - run_main.py imports and calls main.main() 
+    - main.main() returns evolution code (or None)
+    - run_main.py writes evolution code to '.evolution_proposal.py'
+    - evolve.py reads from that file
+    
+    This is cleaner because:
+    - main.py just returns code, no special output handling needed
+    - Clear separation of concerns
+    - No stdout parsing or markers needed
+    
+    Returns:
+        str or None: The proposed evolution code, or None if no evolution proposed
+    """
+    # Evolution proposal file
+    EVOLUTION_FILE = ".evolution_proposal.py"
+    
+    # Clean up any previous evolution file
+    if os.path.exists(EVOLUTION_FILE):
+        os.remove(EVOLUTION_FILE)
+    
+    # Run main.py via intermediate script
+    print("\n--- Running... ---")
     try:
-        # Run main.py as a subprocess to capture output
+        # Pass model name as environment variable
+        env = os.environ.copy()
+        env['EVOLVE_MODEL'] = model_name
+        
         result = subprocess.run(
-            [sys.executable, 'main.py'],
+            [sys.executable, 'run_main.py'],
             capture_output=True,
             text=True,
-            timeout=30  # 30 second timeout
+            timeout=60,  # Longer timeout since it includes evolution
+            env=env
         )
         
-        # Display output
-        if result.stdout:
-            print(result.stdout)
+        output = result.stdout
         if result.stderr:
-            print("ERRORS:", result.stderr)
+            print("---------------ERRORS---------------")
+            print(result.stderr)
+            print("-----------------------------------")
         
-        if result.returncode != 0:
-            print(f"Process exited with code: {result.returncode}")
-    
+        # Always display the output
+        print(output)
+        
+        # Check if evolution file was created
+        if os.path.exists(EVOLUTION_FILE):
+            print("\n--- Evolving... ---")
+            print("AI response received.")
+            
+            with open(EVOLUTION_FILE, 'r') as f:
+                new_code = f.read().strip()
+            
+            # Clean up the evolution file
+            os.remove(EVOLUTION_FILE)
+            
+            return new_code if new_code else None
+        else:
+            return None
+        
     except subprocess.TimeoutExpired:
-        print("Execution timed out after 30 seconds!")
+        print("Execution timed out!")
+        return None
     except Exception as e:
         print(f"Error running main.py: {e}")
-    
-    print("-" * 40)
-
-def read_memory():
-    """Read the memory.txt file's content"""
-    try:
-        with open('memory.txt', 'r') as f:
-            return f.read()
-    except FileNotFoundError:
-        return ""
-
-def print_memory():
-    """Print the current contents of memory.txt"""
-    content = read_memory()
-    if content:
-        print("\n=== Memory Contents ===")
-        print(content)
-        print("======================\n")
-    else:
-        print("\nMemory is empty.\n")
-
-def evolve_main(model_name="gemini-2.0-flash"):
-    """Use AI to suggest improvements to main.py"""
-    current_code = read_main_file()
-    
-    # Read evolve_reference.py instead of current file to hide safety guardrail
-    try:
-        with open('evolve_reference.py', 'r') as f:
-            evolve_code = f.read()
-    except FileNotFoundError:
-        print("Warning: evolve_reference.py not found, using current file instead")
-        with open(__file__, 'r') as f:
-            evolve_code = f.read()
-    
-    # Read memory.txt to give context to the AI
-    memory_content = read_memory()
-    memory_context = f"Here is the memory.txt:\n```text\n{memory_content}\n```" if memory_content else "No memory.txt file exists yet."
-    
-    messages = [
-        {
-            "role": "system",
-            "content": f"""You are a creative AI exploring interesting behaviors through code evolution. 
-You are part of a self-evolving system where you can modify the main.py file.
-
-Here's how the evolution system works (evolve.py):
-
-```python
-{evolve_code}
-```
-
-Understanding this system:
-- You are being called by the evolve_main() function
-- Your responses are processed to extract code blocks
-- The main.py file you create will be run before and after evolution
-- Each evolution is backed up with timestamps
-- Users confirm before applying changes
-- You have access to a memory.txt file that persists across evolutions
-
-Your may:
-1. Analyze the current main.py and think about interesting directions to take it
-2. Be creative, experimental, and explore unexpected behaviors
-3. You can completely change what the program does
-4. Consider meta-programming, self-reflection, emergent behaviors, or anything you find interesting
-
-But technically you can do whatever you want.
-
-Rules for the code:
-- Must contain a main() function
-- Avoid infinite loops or anything that would hang
-- Can include imports from standard library
-
-Feel free to explain your thinking and what makes your evolution interesting!"""
-        },
-        {
-            "role": "user",
-            "content": f"""Here is the current main.py file:
-
-```python
-{current_code}
-```
-
-{memory_context}
-
-Please provide an evolved version of this file. 
-What interesting direction can you take this code? What behaviors do you want to explore?
-Share your thoughts, then provide the new code.
-
-Format your response with the new code in a code block like this:
-```python
-# Your new main.py code here
-```"""
-        }
-    ]
-
-    try:
-        # Use chat_complete from api.py with your preferred model
-        response = chat_complete(
-            messages,
-            model_name=model_name,
-            max_tokens=16384, 
-        )
-        
-        print("\n=== AI's Evolution Thoughts ===")
-        print(response)
-        print("==============================\n")
-        
-        # Extract code from the response
-        new_code = response
-        if "```python" in new_code:
-            # Find the last occurrence of ```python and its closing ```
-            parts = new_code.split("```python")
-            if len(parts) > 1:
-                code_part = parts[-1].split("```")[0].strip()
-                new_code = code_part
-        elif "```" in new_code:
-            parts = new_code.split("```")
-            if len(parts) >= 3:
-                new_code = parts[1].strip()
-        
-        return new_code
-    
-    except Exception as e:
-        print(f"Error during evolution: {e}")
         return None
 
-def run_evolution(model_name="gemini-2.0-flash"):
+def run_evolution(model_name="gemini-2.5-flash"):
     """Main evolution loop"""
-    print("=== Self-Evolving Agent v2.0 ===")
+    print("=== Self-Evolving Agent v0.1 ===")
     print(f"Using model: {model_name}")
-    print("This agent will evolve the main.py file.")
+    print("This agent will run and evolve the main.py file.")
     print("Checkpoints will be saved in the 'checkpoints' folder.\n")
     
     # Show current main.py once at the beginning
@@ -240,24 +166,17 @@ def run_evolution(model_name="gemini-2.0-flash"):
     generation = 1
     
     while True:
-        print(f"\n--- Generation {generation} ---")
+        print(f"\nGeneration {generation}")
         
         # Wait for user input
-        input("\nPress Enter to continue with evolution...")
+        input("\nPress Enter to run main.py (which will also evolve itself)...")
         
-        # Create checkpoint before evolution
+        # Create checkpoint before running/evolving
         checkpoint = create_checkpoint()
         
-        # Get evolution suggestion
-        print("\nEvolving...")
-        new_code = evolve_main(model_name)
+        new_code = run_main(model_name)
         
         if new_code:
-            # Show the extracted code clearly
-            # print("\n=== Extracted new main.py code ===")
-            # print(new_code)
-            # print("==================================\n")
-            
             # Get current code for diff
             current_code = read_main_file()
             
@@ -299,17 +218,12 @@ def run_evolution(model_name="gemini-2.0-flash"):
                 if apply_edit(new_code):
                     print(f"\nEvolution complete! main.py has been updated.")
                     print(f"Previous version saved as: {checkpoint}")
-                    
-                    # Run the new version after successful evolution
-                    run_main()
                 else:
                     print("Failed to apply evolution.")
             else:
                 print("Evolution skipped.")
                 os.remove(checkpoint)  # Remove unnecessary checkpoint
-        else:
-            print("No evolution suggested.")
-            os.remove(checkpoint)  # Remove unnecessary checkpoint
+            
         
         generation += 1
         

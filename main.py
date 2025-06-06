@@ -1,43 +1,78 @@
 import os
-import datetime
-
-MEMORY_FILE = "memory.txt"
-
-def read_memory():
-    if not os.path.exists(MEMORY_FILE):
-        return []
-    with open(MEMORY_FILE, "r") as f:
-        return [line.strip() for line in f.readlines()]
-
-def write_memory(lines):
-    with open(MEMORY_FILE, "w") as f:
-        for line in lines:
-            f.write(line + "\n")
+from api import chat_complete
 
 def main():
-    print("--- Evolved Program ---")
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """Main function that runs and then evolves itself"""
+    print("Hello from generation 1!")
+
+    with open(__file__, 'r') as f:
+        current_code = f.read()
     
-    memory_lines = read_memory()
+    try:
+        with open('evolve_reference.py', 'r') as f:
+            evolve_code = f.read()
+    except FileNotFoundError:
+        evolve_code = "Evolution reference not available"
     
-    if not memory_lines:
-        print(f"'{MEMORY_FILE}' not found. This seems to be my first execution!")
-        new_entry = f"[{timestamp}] Program initialized. Hello, evolving world!"
-        memory_lines.append(new_entry)
-        print(f"Wrote to '{MEMORY_FILE}': {new_entry}")
-    else:
-        print(f"Found '{MEMORY_FILE}'. I've been here before.")
-        print("Previous memories:")
-        for line in memory_lines:
-            print(f"  - {line}")
+    try: 
+        with open('run_main.py', 'r') as f:
+            run_main_code = f.read()
+    except FileNotFoundError:
+        run_main_code = "Run main.py not available"
+    
+    messages = [
+        {
+            "role": "system",
+            "content": f"""You are part of a self-evolving system. Here's how it works:
+
+evolve.py:
+```python
+{evolve_code}
+```
+
+run_main.py:
+```python
+{run_main_code}
+```
+
+You can modify the main.py file to:
+- Change what the program does
+- Add new capabilities
+- Explore interesting behaviors
+- Even modify how evolution works
+
+The code must contain a main() function that includes evolution logic, which returns the main.py code as a string "new_code".
+
+Always provide your response with the new code in this format:
+```python
+# Your evolved main.py code here
+```"""
+        },
+        {
+            "role": "user", 
+            "content": f"""Here is the current main.py:
+
+```python
+{current_code}
+```
+
+Evolve this program in an interesting way. What would you like it to become?"""
+        }
+    ]
+    
+    try:
+        model_name = os.environ.get('EVOLVE_MODEL', 'gemini-2.5-flash')
+        print(f"Attempting evolution with {model_name}...")
+        response = chat_complete(messages, model_name=model_name, max_tokens=16384)
         
-        run_count = sum(1 for line in memory_lines if "Program executed" in line) + 1
-        new_entry = f"[{timestamp}] Program executed. This is run number {run_count} since initialization."
-        memory_lines.append(new_entry)
-        print(f"Adding new memory: {new_entry}")
+        if "```python" in response:
+            parts = response.split("```python")
+            if len(parts) > 1:
+                new_code = parts[-1].split("```")[0].strip()
+                return new_code
+            
+    except Exception as e:
+        print(f"Evolution error: {e}")
+        new_code = None
 
-    write_memory(memory_lines)
-    print("-----------------------")
-
-if __name__ == "__main__":
-    main()
+    return new_code
