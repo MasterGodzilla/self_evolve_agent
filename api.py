@@ -29,6 +29,55 @@ import os
 import threading
 import requests
 
+# API Documentation for self-evolving systems
+API_DOCS = """API.PY - Multi-Provider LLM Client Documentation
+=====================================================
+
+This module provides a unified interface to call multiple LLM providers using chat_complete().
+
+Input: OpenAI format message list - List of dictionaries where each dict contains:
+  - 'role': str - Must be 'system', 'user', or 'assistant' 
+  - 'content': str - The message content/text
+  
+Output: Single string containing the model's response
+
+## Basic Usage:
+```python
+from api import chat_complete
+
+messages = [
+    {"role": "system", "content": "You are a helpful assistant"},
+    {"role": "user", "content": "What is the capital of France?"}
+]
+response = chat_complete(messages, model_name='gemini-2.5-flash')
+print(response)  # Returns: "The capital of France is Paris."
+```
+
+## Multiturn Conversations:
+```python
+messages = [
+    {"role": "system", "content": "You are a helpful assistant"},
+    {"role": "user", "content": "What is 2+2?"},
+    {"role": "assistant", "content": "2+2 equals 4."},
+    {"role": "user", "content": "What about 3+3?"}
+]
+response = chat_complete(messages, model_name='claude-4-sonnet')
+# Returns: "3+3 equals 6."
+```
+
+## Supported Models:
+1. **Google**: 'gemini-2.5-pro', 'gemini-2.5-flash'
+2. **OpenAI**: 'gpt-4o', 'gpt-4o-mini', 'chatgpt-4o-latest', 'gpt-4.1'
+3. **Anthropic**: 'claude-4-sonnet', 'claude-4-opus'
+4. **Hyperbolic**: 'deepseek-v3', 'deepseek-r1', 'qwen3', 'llama3.3-70b'
+
+## Parameters:
+- message: List of message dicts with 'role' and 'content'
+- model_name: Model identifier (default: 'gemini-2.5-flash')
+- max_tokens: Max response length (default: 512)
+
+"""
+
 # Model name mappings
 TOGETHER_MODEL_MAPPING = {
     'llama3.1-8b': 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
@@ -57,8 +106,18 @@ GOOGLE_MODEL_ALIASES = {
 
 # Anthropic model aliases (for common shortcuts)
 ANTHROPIC_MODEL_ALIASES = {
+    'claude-4-opus': 'claude-opus-4-0',
     'claude-opus-4': 'claude-opus-4-0',
+    'claude-4-0-opus': 'claude-opus-4-0',
+    'claude-4.0-opus': 'claude-opus-4-0',
+    'claude-opus-4.0': 'claude-opus-4-0',
+
+    'claude-4-0-sonnet': 'claude-sonnet-4-0',
+    'claude-4-sonnet': 'claude-sonnet-4-0',   
     'claude-sonnet-4': 'claude-sonnet-4-0',
+    'claude-4.0-sonnet': 'claude-sonnet-4-0',
+    'claude-sonnet-4.0': 'claude-sonnet-4-0',
+
     'claude-3-7-sonnet': 'claude-3-7-sonnet-latest',
     'claude-3.7-sonnet': 'claude-3-7-sonnet-latest',
     'claude-3-5-sonnet': 'claude-3-5-sonnet-latest',
