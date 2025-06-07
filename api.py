@@ -224,6 +224,7 @@ def chat_complete(message,
                   n=1, # number of completions to generate
                   api_key=None,
                   thinking_budget=None,  # None means use default behavior
+                  show_thinking=False,
                   ):
     """
     A wrapper function to call chat completion from different providers
@@ -290,10 +291,20 @@ def chat_complete(message,
             if response.status_code != 200:
                 raise Exception(f"Hyperbolic API error: {response_json}")
             
+            import re
+            
             if n == 1:
-                return response_json['choices'][0]['message']['content']
+                message_str = response_json['choices'][0]['message']['content']
+                if not show_thinking:
+                    # remove the <think> {thoughts} </think> from the response, and only return the content
+                    message_str = re.sub(r'<think>.*?</think>', '', message_str, flags=re.DOTALL)
+                return message_str
             else:
-                return [choice['message']['content'] for choice in response_json['choices']]
+                message_strs = [choice['message']['content'] for choice in response_json['choices']]
+                if not show_thinking:
+                    # remove the <think> {thoughts} </think> from the response, and only return the content
+                    message_strs = [re.sub(r'<think>.*?</think>', '', message_str, flags=re.DOTALL) for message_str in message_strs]
+                return message_strs
         else:
             # Use OpenAI API key
             if api_key is None:
@@ -313,10 +324,13 @@ def chat_complete(message,
             temperature=temperature,
             n=n,
         )
+
         if n == 1:
             return chat_completion.choices[0].message.content
         else:
             return [choice.message.content for choice in chat_completion.choices]
+        
+                
 
     elif provider == 'anthropic':
         try:

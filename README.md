@@ -76,7 +76,7 @@ This project explores autonomous AI behavior through self-directed code evolutio
 python evolve.py
 
 # Use a specific model
-python evolve.py --model gpt-4o
+python evolve.py --model claude-4-sonnet
 python evolve.py -m gemini-2.5-pro
 
 # Reset main.py to main_zero.py (saves current main.py to checkpoint first)

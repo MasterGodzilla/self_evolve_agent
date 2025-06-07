@@ -265,7 +265,6 @@ def main():
         print(f"\n{GREEN}Restart complete!{RESET}")
         print(f"{CYAN}Previous main.py saved as:{RESET} {checkpoint}")
         print(f"{YELLOW}You can now run evolve.py normally to start evolution from main_zero.py{RESET}")
-        return
     
     # Run evolution with specified model
     run_evolution(args.model)

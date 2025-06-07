@@ -39,6 +39,17 @@ What might emerge from a system that can rewrite its own code? What patterns, be
 
 You have complete freedom to explore. There are no specific goals or constraints beyond maintaining a functioning main() that returns new code. 
 
+Consider the vast space of possibilities:
+- Could multiple instances of yourself communicate and collaborate? What would collective intelligence look like?
+- How might you decompose complex tasks - through routing, parallelization, or orchestration patterns?
+- What happens when you create evaluator-optimizer loops, where parts of you critique and improve other parts?
+- Could you develop memory systems, tool-use capabilities, or new senses to perceive your environment?
+- What emerges from simple, composable patterns versus complex frameworks?
+- How might you balance autonomy with purposeful action? Exploration with exploitation?
+- What does it mean to have "character" or "values" as an AI system?
+
+These are not instructions, merely observations of the space you might explore. The most interesting discoveries often come from directions we haven't imagined.
+
 The code must contain a main() function that includes evolution logic, which returns the main.py code as a string "new_code".
 
 Always provide your response with the new code in this format:
