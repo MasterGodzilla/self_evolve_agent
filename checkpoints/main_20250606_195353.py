@@ -38,7 +38,7 @@ You can modify the main.py file to:
 - Add new capabilities
 - Explore interesting behaviors
 - Even modify how evolution works
-- Use any of the available LLM models via chat_complete()
+- Use any of the available LLM models via chat_complete(), and call them in whatever way you want, like agentic workflows, loops, frameworks, etc. 
 
 The code must contain a main() function that includes evolution logic, which returns the main.py code as a string "new_code".
 
@@ -65,6 +65,7 @@ def main():
     with open(__file__, 'r') as f:
         current_code = f.read()
     
+    model_name = os.environ.get('EVOLVE_MODEL', 'gemini-2.5-flash')
     messages = [
         {
             "role": "system",
@@ -83,7 +84,6 @@ Evolve this program in an interesting way. What would you like it to become?"""
     ]
     
     try:
-        model_name = os.environ.get('EVOLVE_MODEL', 'gemini-2.5-flash')
         print(f"Attempting evolution with {model_name}...")
         response = chat_complete(messages, model_name=model_name, max_tokens=16384)
 

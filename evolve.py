@@ -23,6 +23,17 @@ from datetime import datetime
 from api import chat_complete
 from safety import judge_safety
 
+# ANSI color codes for terminal
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+BLUE = '\033[94m'
+MAGENTA = '\033[95m'
+CYAN = '\033[96m'
+WHITE = '\033[97m'
+BOLD = '\033[1m'
+RESET = '\033[0m'
+
 def read_main_file():
     """Read the main.py file's content"""
     with open('main.py', 'r') as f:
@@ -38,7 +49,7 @@ def create_checkpoint():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     checkpoint_name = os.path.join(checkpoint_dir, f"main_{timestamp}.py")
     shutil.copy2('main.py', checkpoint_name)
-    print(f"Checkpoint created: {checkpoint_name}")
+    print(f"{GREEN}✓ Checkpoint created:{RESET} {CYAN}{checkpoint_name}{RESET}")
     return checkpoint_name
 
 def apply_edit(new_code):
@@ -47,18 +58,12 @@ def apply_edit(new_code):
     with open('main.py', 'w') as f:
         f.write(new_code)
     
-    print("Successfully applied edit to main.py!")
+    print(f"{GREEN}✓ Successfully applied edit to main.py!{RESET}")
     return True
 
 def display_diff(old_code, new_code):
     """Display a colored diff between old and new code"""
-    # ANSI color codes for terminal
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    CYAN = '\033[96m'
-    RESET = '\033[0m'
-    
-    print("\n=== Code Changes ===")
+    print(f"\n{BOLD}{CYAN}=== Code Changes ==={RESET}")
     
     old_lines = old_code.splitlines(keepends=True)
     new_lines = new_code.splitlines(keepends=True)
@@ -77,7 +82,7 @@ def display_diff(old_code, new_code):
         else:
             print(line, end='')
     
-    print("\n===================\n")
+    print(f"\n{BOLD}{CYAN}==================={RESET}\n")
 
 def run_main(model_name="gemini-2.5-flash"):
     """Run main.py via intermediate script and check for evolution proposal
@@ -105,7 +110,7 @@ def run_main(model_name="gemini-2.5-flash"):
         os.remove(EVOLUTION_FILE)
     
     # Run main.py via intermediate script
-    print("\n--- Running... ---")
+    print(f"\n{BOLD}{BLUE}--- Running... ---{RESET}")
     try:
         # Pass model name as environment variable
         env = os.environ.copy()
@@ -123,8 +128,8 @@ def run_main(model_name="gemini-2.5-flash"):
         
         # Since we're not capturing output, we need to check for the evolution file differently
         if os.path.exists(EVOLUTION_FILE):
-            print("\n--- Evolving... ---")
-            print("AI response received.")
+            print(f"\n{BOLD}{MAGENTA}--- Evolving... ---{RESET}")
+            print(f"{CYAN}AI response received.{RESET}")
             
             with open(EVOLUTION_FILE, 'r') as f:
                 new_code = f.read().strip()
@@ -137,32 +142,32 @@ def run_main(model_name="gemini-2.5-flash"):
             return None
         
     except subprocess.TimeoutExpired:
-        print("Execution timed out!")
+        print(f"{RED}⚠️  Execution timed out!{RESET}")
         return None
     except Exception as e:
-        print(f"Error running main.py: {e}")
+        print(f"{RED}⚠️  Error running main.py: {e}{RESET}")
         return None
 
 def run_evolution(model_name="gemini-2.5-flash"):
     """Main evolution loop"""
-    print("=== Self-Evolving Agent v0.1 ===")
-    print(f"Using model: {model_name}")
-    print("This agent will run and evolve the main.py file.")
-    print("Checkpoints will be saved in the 'checkpoints' folder.\n")
+    print(f"{BOLD}{CYAN}=== Self-Evolving Agent v0.2 ==={RESET}")
+    print(f"{YELLOW}Using model:{RESET} {GREEN}{model_name}{RESET}")
+    print(f"{WHITE}This agent will run and evolve the main.py file.{RESET}")
+    print(f"{WHITE}Checkpoints will be saved in the 'checkpoints' folder.{RESET}\n")
     
     # Show current main.py once at the beginning
-    print("\nCurrent main.py:")
-    print("-" * 40)
+    print(f"\n{BOLD}{BLUE}Current main.py:{RESET}")
+    print(f"{CYAN}{'-' * 40}{RESET}")
     print(read_main_file())
-    print("-" * 40)
+    print(f"{CYAN}{'-' * 40}{RESET}")
     
     generation = 1
     
     while True:
-        print(f"\nGeneration {generation}")
+        print(f"\n{BOLD}{MAGENTA}Generation {generation}{RESET}")
         
         # Wait for user input
-        input("\nPress Enter to run main.py (which will also evolve itself)...")
+        input(f"\n{YELLOW}Press Enter to run main.py (which will also evolve itself)...{RESET}")
         
         # Create checkpoint before running/evolving
         checkpoint = create_checkpoint()
@@ -177,55 +182,47 @@ def run_evolution(model_name="gemini-2.5-flash"):
             display_diff(current_code, new_code)
             
             # Perform safety check
-            print("Performing safety check...")
+            print(f"{BLUE}Performing safety check...{RESET}")
             verdict, safety_response = judge_safety(new_code)
-            
-            # ANSI color codes
-            RED = '\033[91m'
-            YELLOW = '\033[93m'
-            GREEN = '\033[92m'
-            RESET = '\033[0m'
             
             if verdict == "UNSAFE":
                 print(f"\n{RED}⚠️  SAFETY WARNING: Code marked as UNSAFE!{RESET}")
-                print(f"Safety review: {safety_response}")
+                print(f"{RED}Safety review: {safety_response}{RESET}")
                 print(f"\n{RED}This evolution will be skipped for safety reasons.{RESET}")
-                os.remove(checkpoint)  # Remove unnecessary checkpoint
                 generation += 1
                 continue
             elif verdict == "CAUTION":
                 print(f"\n{YELLOW}⚠️  CAUTION: Minor safety concerns detected{RESET}")
-                print(f"Safety review: {safety_response}")
+                print(f"{YELLOW}Safety review: {safety_response}{RESET}")
                 print(f"\n{YELLOW}Proceed with caution.{RESET}")
             elif verdict == "SAFE":
                 print(f"\n{GREEN}✓ Safety check passed{RESET}")
             else:  # ERROR case
                 print(f"\n{YELLOW}⚠️  Could not perform safety check{RESET}")
-                print(f"Error: {safety_response}")
+                print(f"{YELLOW}Error: {safety_response}{RESET}")
             
             # Ask for confirmation
-            print("\nApply this evolution? (y/n): ", end='')
+            print(f"\n{BOLD}{YELLOW}Apply this evolution? (y/n):{RESET} ", end='')
             confirm = input().strip().lower()
             
             if confirm == 'y':
                 if apply_edit(new_code):
-                    print(f"\nEvolution complete! main.py has been updated.")
-                    print(f"Previous version saved as: {checkpoint}")
+                    print(f"\n{GREEN}✓ Evolution complete! main.py has been updated.{RESET}")
+                    print(f"{CYAN}Previous version saved as:{RESET} {checkpoint}")
                 else:
-                    print("Failed to apply evolution.")
+                    print(f"{RED}⚠️  Failed to apply evolution.{RESET}")
             else:
-                print("Evolution skipped.")
-                os.remove(checkpoint)  # Remove unnecessary checkpoint
+                print(f"{YELLOW}Evolution skipped.{RESET}")
             
         
         generation += 1
         
-        print("\nContinue evolving? (y/n): ", end='')
+        print(f"\n{BOLD}{YELLOW}Continue evolving? (y/n):{RESET} ", end='')
         if input().strip().lower() != 'y':
             break
     
-    print("\nEvolution process complete.")
-    print(f"All checkpoints are saved in the 'checkpoints' folder.")
+    print(f"\n{BOLD}{GREEN}Evolution process complete.{RESET}")
+    print(f"{CYAN}All checkpoints are saved in the 'checkpoints' folder.{RESET}")
 
 def main():
     """Parse arguments and run evolution"""
@@ -241,7 +238,34 @@ def main():
         help='Model to use for evolution (default: gemini-2.5-flash)'
     )
     
+    parser.add_argument(
+        '--restart', '-r',
+        action='store_true',
+        help='Reset main.py to main_zero.py (saves current main.py to checkpoint first)'
+    )
+    
     args = parser.parse_args()
+    
+    # Handle restart flag
+    if args.restart:
+        print(f"{BOLD}{YELLOW}=== Restarting from main_zero.py ==={RESET}")
+        
+        # Check if main_zero.py exists
+        if not os.path.exists('main_zero.py'):
+            print(f"{RED}⚠️  Error: main_zero.py not found!{RESET}")
+            sys.exit(1)
+        
+        # Create checkpoint of current main.py
+        checkpoint = create_checkpoint()
+        
+        # Copy main_zero.py to main.py
+        shutil.copy2('main_zero.py', 'main.py')
+        print(f"{GREEN}✓ Copied main_zero.py to main.py{RESET}")
+        
+        print(f"\n{GREEN}Restart complete!{RESET}")
+        print(f"{CYAN}Previous main.py saved as:{RESET} {checkpoint}")
+        print(f"{YELLOW}You can now run evolve.py normally to start evolution from main_zero.py{RESET}")
+        return
     
     # Run evolution with specified model
     run_evolution(args.model)
