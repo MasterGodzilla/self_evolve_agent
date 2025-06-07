@@ -113,22 +113,15 @@ def run_main(model_name="gemini-2.5-flash"):
         
         result = subprocess.run(
             [sys.executable, 'run_main.py'],
-            capture_output=True,
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
             text=True,
-            timeout=60,  # Longer timeout since it includes evolution
+            timeout=300,
             env=env
         )
         
-        output = result.stdout
-        if result.stderr:
-            print("---------------ERRORS---------------")
-            print(result.stderr)
-            print("-----------------------------------")
-        
-        # Always display the output
-        print(output)
-        
-        # Check if evolution file was created
+        # Since we're not capturing output, we need to check for the evolution file differently
         if os.path.exists(EVOLUTION_FILE):
             print("\n--- Evolving... ---")
             print("AI response received.")
